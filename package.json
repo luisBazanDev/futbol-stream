@@ -1,0 +1,17 @@
+{
+  "name": "futbol-stream-control",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Control remoto minimalista para un stream de futbol con OBS y VDO.Ninja",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "obs-websocket-js": "^5.0.6",
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}
