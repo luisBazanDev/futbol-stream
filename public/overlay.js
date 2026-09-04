@@ -10,6 +10,9 @@ function render() {
   $('#overlay-away-score').textContent = match.awayScore;
   $('#overlay-period').textContent = match.period;
   $('#overlay-clock').textContent = time(match.clock.elapsedMs);
+  const addedSeconds = Math.max(0, Number(match.addedSeconds || 0));
+  $('#overlay-added').textContent = `+${time(addedSeconds * 1000)}`;
+  $('#overlay-added').hidden = addedSeconds === 0;
 }
 function connect() {
   const socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);

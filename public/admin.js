@@ -21,7 +21,7 @@ function render() {
   $('#home-score').textContent = match.homeScore;
   $('#away-score').textContent = match.awayScore;
   setInputWhenIdle('#period', match.period);
-  setInputWhenIdle('#added', match.addedSeconds);
+  setInputWhenIdle('#added', Math.floor(Number(match.addedSeconds || 0) / 60));
   $('#clock').textContent = formatTime(match.clock.elapsedMs);
   $('#clock-toggle').textContent = match.clock.status === 'running' ? 'PAUSAR RELOJ' : 'INICIAR RELOJ';
   $('#obs-status').textContent = obs.connected ? (obs.streaming ? 'OBS / STREAMING' : 'OBS ONLINE') : 'OBS OFFLINE';
@@ -72,6 +72,7 @@ document.addEventListener('click', async (event) => {
     if (event.target.id === 'audio-setup') await setupLaptopAudio();
     if (event.target.id === 'open-audio') window.open(state.laptopAudio.pushUrl, '_blank', 'noopener');
     if (event.target.id === 'copy-audio') { await navigator.clipboard.writeText(state.laptopAudio.pushUrl); event.target.textContent = 'COPIADO'; setTimeout(() => { event.target.textContent = 'COPIAR'; }, 1500); }
+    if (event.target.id === 'apply-added') await applyExtraTime();
     if (connect) await connectCamera(Number(connect.dataset.connect));
     if (air) { state = await api(`/api/cameras/${air.dataset.air}/air`, { method: 'POST' }); render(); }
     if (event.target.id === 'clock-toggle') { state = await api('/api/match/clock', { method: 'POST', body: JSON.stringify({ action: state.match.clock.status === 'running' ? 'pause' : 'start' }) }); render(); }
@@ -81,10 +82,24 @@ document.addEventListener('click', async (event) => {
   } catch (error) { window.alert(error.message); }
 });
 
-['home-name', 'away-name', 'period', 'added'].forEach((id) => $((`#${id}`)).addEventListener('change', () => {
-  const map = { 'home-name': 'home', 'away-name': 'away', period: 'period', added: 'addedSeconds' };
+['home-name', 'away-name', 'period'].forEach((id) => $((`#${id}`)).addEventListener('change', () => {
+  const map = { 'home-name': 'home', 'away-name': 'away', period: 'period' };
   patchMatch({ [map[id]]: id === 'added' ? Number($(`#${id}`).value) : $(`#${id}`).value });
 }));
+
+async function applyExtraTime() {
+  const minutes = Math.max(0, Math.min(99, Number($('#added').value) || 0));
+  pendingMatchPatches += 1;
+  try {
+    state = await api('/api/match/extra-time', {
+      method: 'POST',
+      body: JSON.stringify({ minutes }),
+    });
+    render();
+  } finally {
+    pendingMatchPatches -= 1;
+  }
+}
 
 async function connectCamera(slot) {
   const camera = state.cameras.find((item) => item.slot === slot);

@@ -49,6 +49,7 @@ const defaultState = {
     awayScore: 0,
     period: "1T",
     addedSeconds: 0,
+    addedTimeUnit: "seconds",
     clock: { status: "stopped", elapsedMs: 0, startedAt: null },
   },
   activeCamera: null,
@@ -67,6 +68,11 @@ function loadState() {
 }
 
 let state = loadState();
+if (!state.match.addedTimeUnit) {
+  state.match.addedSeconds = Number(state.match.addedSeconds || 0) * 60;
+  state.match.addedTimeUnit = "seconds";
+  saveState();
+}
 state.laptopAudio = { ...makeLaptopAudio(), ...(state.laptopAudio || {}) };
 state.obs = { connected: false, streaming: false, recording: false, ...(state.obs || {}) };
 let obs;
@@ -342,6 +348,17 @@ app.patch("/api/match", (req, res) => {
   for (const key of allowed) {
     if (req.body[key] !== undefined) state.match[key] = req.body[key];
   }
+  changed();
+  res.json(snapshot());
+});
+
+app.post("/api/match/extra-time", (req, res) => {
+  const minutes = Number(req.body.minutes);
+  if (!Number.isFinite(minutes) || minutes < 0 || minutes > 99) {
+    return res.status(400).json({ error: "El tiempo extra debe estar entre 0 y 99 minutos" });
+  }
+  state.match.addedSeconds = Math.round(minutes * 60);
+  state.match.addedTimeUnit = "seconds";
   changed();
   res.json(snapshot());
 });

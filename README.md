@@ -26,6 +26,8 @@ Para acceder desde la laptop, reemplaza `localhost` por la IP Tailscale del PC.
 6. Al conectar cada cámara, el servidor crea una fuente Browser Source en la escena activa de OBS.
 7. `INICIAR STREAM / REC` inicia la transmisión y la grabación de OBS usando la configuración de salida que ya tengas en OBS.
 
+El campo `TIEMPO EXTRA` se introduce en minutos y se envía con el botón `ENVIAR TIEMPO EXTRA`. Internamente se guarda en segundos; por ejemplo, `1` se muestra en el overlay como `+01:00`. Enviar `0` oculta el indicador.
+
 Variables opcionales:
 
 ```bash

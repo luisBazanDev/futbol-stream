@@ -34,6 +34,7 @@ input:focus, select:focus { border-color: var(--accent); }
 .match-meta { align-items: end; }
 .clock-display { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; letter-spacing: .04em; margin: 20px 0 12px; }
 .clock-actions button { flex: 1; }
+.extra-time-button { margin-top: 12px; width: 100%; }
 .camera-list { display: grid; gap: 8px; }
 .camera-card { align-items: center; border: 1px solid var(--line); display: grid; gap: 13px; grid-template-columns: 46px 1fr auto; padding: 10px; }
 .camera-card.active { border-color: var(--accent); }
@@ -72,6 +73,7 @@ dialog input { margin: 0 0 10px; font-size: 10px; }
 .overlay-clock { align-items: center; border-left: 1px solid #444; border-right: 1px solid #444; display: flex; flex-direction: column; justify-content: center; min-width: 72px; padding: 5px 9px; }
 .overlay-clock span { color: var(--accent); font-size: 10px; }
 .overlay-clock strong { font-size: 19px; }
+.overlay-clock small { color: var(--accent); font-size: 10px; margin-top: 2px; }
 .live-line { bottom: 12px; color: #fff9; font-size: 9px; left: 42px; position: fixed; z-index: 100; }
 .live-line span { background: var(--accent); display: inline-block; height: 5px; margin-right: 5px; width: 5px; }
 @media (max-width: 760px) { .control-grid { display: block; margin-top: 14px; } .panel { margin-bottom: 14px; } .topbar { padding: 15px; } .control-grid { padding: 0 10px; } .camera-card { grid-template-columns: 35px 1fr; } .camera-actions { grid-column: 2; } .audio-link { flex-wrap: wrap; } .audio-link input { flex-basis: 100%; } dialog { padding: 18px; } .qr-placeholder { margin: 16px auto; width: min(220px, 70vw); } .qr-placeholder img { width: 100%; } .scorebug { bottom: 18px; left: 10px; min-width: 0; transform: scale(.75); transform-origin: left bottom; } }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CONTROL / FUTBOL STREAM</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=3">
 </head>
 <body class="admin-page">
   <header class="topbar">
@@ -20,7 +20,8 @@
       </div>
       <div class="score-row"><button class="score-button" data-score="homeScore" data-delta="-1">−</button><strong id="home-score">0</strong><span>:</span><strong id="away-score">0</strong><button class="score-button" data-score="awayScore" data-delta="1">+</button></div>
       <div class="score-actions"><button data-score="homeScore" data-delta="1">LOCAL +1</button><button data-score="awayScore" data-delta="1">VISITANTE +1</button><button data-score="homeScore" data-delta="-1">LOCAL −1</button><button data-score="awayScore" data-delta="-1">VISITANTE −1</button></div>
-      <div class="match-meta"><label>PERIODO<select id="period"><option>1T</option><option>2T</option><option>ET</option><option>FINAL</option></select></label><label>ADICIONAL<input id="added" type="number" min="0" max="99" value="0"> min</label></div>
+      <div class="match-meta"><label>PERIODO<select id="period"><option>1T</option><option>2T</option><option>ET</option><option>FINAL</option></select></label><label>TIEMPO EXTRA<input id="added" type="number" min="0" max="99" value="0"> min / overlay</label></div>
+      <button id="apply-added" class="extra-time-button">ENVIAR TIEMPO EXTRA</button>
       <div class="clock-display" id="clock">00:00</div>
       <div class="clock-actions"><button id="clock-toggle" class="primary">INICIAR RELOJ</button><button id="clock-reset">REINICIAR</button></div>
     </section>
@@ -42,6 +43,6 @@
     </section>
   </main>
   <dialog id="qr-dialog"><button class="dialog-close" onclick="this.closest('dialog').close()">×</button><p id="qr-label" class="eyebrow"></p><div class="qr-placeholder"><img id="qr-image" alt="QR para conectar la cámara"></div><input id="push-url" readonly><button id="copy-url" class="primary">COPIAR ENLACE</button></dialog>
-  <script src="/admin.js"></script>
+  <script src="/admin.js?v=3"></script>
 </body>
 </html>
