@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CONTROL / FUTBOL STREAM</title>
-  <link rel="stylesheet" href="/styles.css?v=3">
+  <link rel="stylesheet" href="/styles.css?v=4">
 </head>
 <body class="admin-page">
   <header class="topbar">
@@ -12,18 +12,21 @@
     <div class="system-status"><span id="connection-dot" class="status-dot offline"></span><span id="connection-label">DESCONECTADO</span></div>
   </header>
   <main class="control-grid">
-    <section class="panel match-panel">
-      <div class="panel-heading"><span>PARTIDO</span><span id="obs-status" class="tag">OBS OFFLINE</span></div>
-      <div class="team-fields">
-        <label>LOCAL<input id="home-name" maxlength="20"></label>
-        <label>VISITANTE<input id="away-name" maxlength="20"></label>
+    <section class="panel program-panel">
+      <div class="panel-heading"><span>MONITOR DE PROGRAMA</span><span id="program-label" class="tag">SIN CAMARA AL AIRE</span></div>
+      <div class="program-monitor">
+        <div class="program-video-wrap">
+          <div id="program-empty" class="program-empty">PON UNA CAMARA AL AIRE<br><small>EL MONITOR REPLICA LA ESCENA DEL STREAM</small></div>
+          <iframe id="program-video" title="Monitor de programa" allow="autoplay; fullscreen" allowfullscreen hidden></iframe>
+          <iframe id="program-overlay" title="Overlay del programa" src="/overlay" tabindex="-1"></iframe>
+        </div>
       </div>
-      <div class="score-row"><button class="score-button" data-score="homeScore" data-delta="-1">−</button><strong id="home-score">0</strong><span>:</span><strong id="away-score">0</strong><button class="score-button" data-score="awayScore" data-delta="1">+</button></div>
-      <div class="score-actions"><button data-score="homeScore" data-delta="1">LOCAL +1</button><button data-score="awayScore" data-delta="1">VISITANTE +1</button><button data-score="homeScore" data-delta="-1">LOCAL −1</button><button data-score="awayScore" data-delta="-1">VISITANTE −1</button></div>
-      <div class="match-meta"><label>PERIODO<select id="period"><option>1T</option><option>2T</option><option>ET</option><option>FINAL</option></select></label><label>TIEMPO EXTRA<input id="added" type="number" min="0" max="99" value="0"> min / overlay</label></div>
-      <button id="apply-added" class="extra-time-button">ENVIAR TIEMPO EXTRA</button>
-      <div class="clock-display" id="clock">00:00</div>
-      <div class="clock-actions"><button id="clock-toggle" class="primary">INICIAR RELOJ</button><button id="clock-reset">REINICIAR</button></div>
+      <div class="program-controls">
+        <span class="muted">CAMARA AL AIRE</span>
+        <button id="program-listen" class="primary" disabled>ESCUCHAR STREAM</button>
+        <span id="program-audio-status" class="muted">AUDIO EN PAUSA</span>
+      </div>
+      <div id="program-audio" class="program-audio" aria-hidden="true"></div>
     </section>
 
     <section class="panel cameras-panel">
@@ -31,18 +34,34 @@
       <div id="camera-list" class="camera-list"></div>
     </section>
 
-    <section class="panel obs-panel">
-      <div class="panel-heading"><span>PRODUCCION</span><span><span id="obs-status" class="tag">OBS OFFLINE</span> <span id="record-status" class="tag">REC OFF</span></span></div>
-      <div class="production-row"><button id="obs-connect" class="primary">CONECTAR OBS</button><button id="stream-toggle" disabled>INICIAR STREAM</button></div>
-      <div class="audio-title">FUENTE DE AUDIO</div>
-      <div class="audio-row"><button data-audio="camera">CAMARA</button><button data-audio="laptop">LAPTOP / MICROFONOS</button><button data-audio="both">CAMARA + LAPTOP</button><button data-audio="all">TODAS LAS FUENTES</button><button data-audio="muted">SILENCIO</button></div>
-      <div class="audio-setup"><button id="audio-setup">CONFIGURAR AUDIO LAPTOP</button><span id="audio-status" class="muted">NO CONFIGURADO</span></div>
-      <div id="audio-link" class="audio-link" hidden><input id="audio-push-url" readonly><button id="open-audio">ABRIR EN ESTA LAPTOP</button><button id="copy-audio">COPIAR</button></div>
-      <a class="overlay-link" href="/overlay" target="_blank">ABRIR OVERLAY <span>↗</span></a>
-      <p class="help">El panel se sincroniza en tiempo real. Con Tailscale, abre esta misma URL usando la IP del PC.</p>
-    </section>
+    <aside class="side-stack">
+      <section class="panel match-panel">
+        <div class="panel-heading"><span>PARTIDO</span><span id="match-obs-status" class="tag">OBS OFFLINE</span></div>
+        <div class="team-fields">
+          <label>LOCAL<input id="home-name" maxlength="20"></label>
+          <label>VISITANTE<input id="away-name" maxlength="20"></label>
+        </div>
+        <div class="score-row"><button class="score-button" data-score="homeScore" data-delta="-1">−</button><strong id="home-score">0</strong><span>:</span><strong id="away-score">0</strong><button class="score-button" data-score="awayScore" data-delta="1">+</button></div>
+        <div class="score-actions"><button data-score="homeScore" data-delta="1">LOCAL +1</button><button data-score="awayScore" data-delta="1">VISITANTE +1</button><button data-score="homeScore" data-delta="-1">LOCAL −1</button><button data-score="awayScore" data-delta="-1">VISITANTE −1</button></div>
+        <div class="match-meta"><label>PERIODO<select id="period"><option>1T</option><option>2T</option><option>ET</option><option>FINAL</option></select></label><label>TIEMPO EXTRA<input id="added" type="number" min="0" max="99" value="0"> min / overlay</label></div>
+        <button id="apply-added" class="extra-time-button">ENVIAR TIEMPO EXTRA</button>
+        <div class="clock-display" id="clock">00:00</div>
+        <div class="clock-actions"><button id="clock-toggle" class="primary">INICIAR RELOJ</button><button id="clock-reset">REINICIAR</button></div>
+      </section>
+
+      <section class="panel obs-panel">
+        <div class="panel-heading"><span>PRODUCCION</span><span><span id="obs-status" class="tag">OBS OFFLINE</span> <span id="record-status" class="tag">REC OFF</span></span></div>
+        <div class="production-row"><button id="obs-connect" class="primary">CONECTAR OBS</button><button id="stream-toggle" disabled>INICIAR STREAM</button></div>
+        <div class="audio-title">FUENTE DE AUDIO</div>
+        <div class="audio-row"><button data-audio="camera">CAMARA</button><button data-audio="laptop">LAPTOP / MICROFONOS</button><button data-audio="both">CAMARA + LAPTOP</button><button data-audio="all">TODAS LAS FUENTES</button><button data-audio="muted">SILENCIO</button></div>
+        <div class="audio-setup"><button id="audio-setup">CONFIGURAR AUDIO LAPTOP</button><span id="audio-status" class="muted">NO CONFIGURADO</span></div>
+        <div id="audio-link" class="audio-link" hidden><input id="audio-push-url" readonly><button id="open-audio">ABRIR EN ESTA LAPTOP</button><button id="copy-audio">COPIAR</button></div>
+        <a class="overlay-link" href="/overlay" target="_blank">ABRIR OVERLAY <span>↗</span></a>
+        <p class="help">El panel se sincroniza en tiempo real. Con Tailscale, abre esta misma URL usando la IP del PC.</p>
+      </section>
+    </aside>
   </main>
   <dialog id="qr-dialog"><button class="dialog-close" onclick="this.closest('dialog').close()">×</button><p id="qr-label" class="eyebrow"></p><div class="qr-placeholder"><img id="qr-image" alt="QR para conectar la cámara"></div><input id="push-url" readonly><button id="copy-url" class="primary">COPIAR ENLACE</button></dialog>
-  <script src="/admin.js?v=3"></script>
+  <script src="/admin.js?v=4"></script>
 </body>
 </html>

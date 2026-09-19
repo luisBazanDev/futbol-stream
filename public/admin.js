@@ -1,5 +1,8 @@
 let state;
 let pendingMatchPatches = 0;
+let audioListening = false;
+let cameraListSignature = '';
+let audioMonitorSignature = '';
 const $ = (selector) => document.querySelector(selector);
 const api = async (url, options = {}) => {
   const response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
@@ -25,6 +28,7 @@ function render() {
   $('#clock').textContent = formatTime(match.clock.elapsedMs);
   $('#clock-toggle').textContent = match.clock.status === 'running' ? 'PAUSAR RELOJ' : 'INICIAR RELOJ';
   $('#obs-status').textContent = obs.connected ? (obs.streaming ? 'OBS / STREAMING' : 'OBS ONLINE') : 'OBS OFFLINE';
+  $('#match-obs-status').textContent = obs.connected ? 'OBS ONLINE' : 'OBS OFFLINE';
   $('#record-status').textContent = obs.recording ? 'REC / ON' : 'REC OFF';
   $('#record-status').classList.toggle('recording', Boolean(obs.recording));
   $('#obs-connect').textContent = obs.connected ? 'DESCONECTAR OBS' : 'CONECTAR OBS';
@@ -37,12 +41,85 @@ function render() {
   $('#audio-link').hidden = !laptopAudio.pushUrl;
   if (laptopAudio.pushUrl) $('#audio-push-url').value = laptopAudio.pushUrl;
   document.querySelectorAll('[data-audio]').forEach((button) => button.classList.toggle('active', button.dataset.audio === state.activeAudio));
-  $('#camera-list').innerHTML = state.cameras.map((camera) => `
-    <article class="camera-card ${state.activeCamera === camera.slot ? 'active' : ''}">
-      <div class="camera-index">0${camera.slot}</div>
-      <div><div class="camera-name">${escapeHtml(camera.label)}</div><div class="camera-state ${camera.connected ? 'connected' : ''}">${camera.connected ? 'ENLACE GENERADO / LISTA' : 'SIN CONECTAR'}</div></div>
-      <div class="camera-actions"><button data-connect="${camera.slot}">${camera.connected ? 'QR / ENLACE' : 'CONECTAR'}</button><button class="air" data-air="${camera.slot}" ${camera.connected ? '' : 'disabled'}>${state.activeCamera === camera.slot ? 'AL AIRE' : 'PONER AL AIRE'}</button></div>
-    </article>`).join('');
+  const nextCameraListSignature = JSON.stringify(state.cameras.map((camera) => ({
+    slot: camera.slot,
+    label: camera.label,
+    connected: camera.connected,
+    viewUrl: camera.viewUrl,
+    active: state.activeCamera === camera.slot,
+  })));
+  if (nextCameraListSignature !== cameraListSignature) {
+    cameraListSignature = nextCameraListSignature;
+    $('#camera-list').innerHTML = state.cameras.map((camera) => `
+      <article class="camera-card ${state.activeCamera === camera.slot ? 'active' : ''} ${camera.connected ? '' : 'offline'}">
+        <div class="camera-preview-wrap">
+          ${camera.viewUrl ? `<iframe class="camera-preview" title="Preview ${escapeHtml(camera.label)}" src="${camera.viewUrl}&muted=1" allow="autoplay"></iframe>` : '<div class="camera-preview-empty">SIN SEÑAL</div>'}
+          <span class="camera-index">0${camera.slot}</span>
+          ${state.activeCamera === camera.slot ? '<span class="on-air">AL AIRE</span>' : ''}
+        </div>
+        <div class="camera-info"><div class="camera-name">${escapeHtml(camera.label)}</div><div class="camera-state ${camera.connected ? 'connected' : ''}">${camera.connected ? 'ENLACE GENERADO / LISTA' : 'SIN CONECTAR'}</div></div>
+        <div class="camera-actions"><button data-connect="${camera.slot}">${camera.connected ? 'QR / ENLACE' : 'CONECTAR'}</button><button class="air" data-air="${camera.slot}" ${camera.connected ? '' : 'disabled'}>${state.activeCamera === camera.slot ? 'AL AIRE' : 'PONER AL AIRE'}</button></div>
+      </article>`).join('');
+  }
+  syncProgramMonitor();
+}
+
+function syncProgramMonitor() {
+  const activeCamera = state.cameras.find((camera) => camera.slot === state.activeCamera && camera.viewUrl);
+  const video = $('#program-video');
+  const empty = $('#program-empty');
+  const label = $('#program-label');
+  const listen = $('#program-listen');
+  if (!activeCamera) {
+    video.hidden = true;
+    empty.hidden = false;
+    label.textContent = 'SIN CAMARA AL AIRE';
+    listen.disabled = true;
+    if (audioListening) toggleAudioListening(false);
+    return;
+  }
+  const source = `${activeCamera.viewUrl}&muted=1`;
+  if (video.src !== new URL(source, window.location.href).href) video.src = source;
+  video.hidden = false;
+  empty.hidden = true;
+  label.textContent = `AL AIRE / ${activeCamera.label}`;
+  listen.disabled = false;
+  syncAudioMonitor();
+}
+
+function audioMonitorSources() {
+  const activeCamera = state.cameras.find((camera) => camera.slot === state.activeCamera && camera.viewUrl);
+  const sources = [];
+  if (['camera', 'both', 'all'].includes(state.activeAudio) && activeCamera) sources.push(activeCamera.viewUrl);
+  if (['all'].includes(state.activeAudio)) {
+    state.cameras.filter((camera) => camera.viewUrl && camera.slot !== state.activeCamera).forEach((camera) => sources.push(camera.viewUrl));
+  }
+  if (['laptop', 'both', 'all'].includes(state.activeAudio) && state.laptopAudio?.viewUrl) sources.push(state.laptopAudio.viewUrl);
+  return sources;
+}
+
+function syncAudioMonitor() {
+  const container = $('#program-audio');
+  if (!audioListening) {
+    if (audioMonitorSignature) container.replaceChildren();
+    audioMonitorSignature = '';
+    $('#program-audio-status').textContent = 'AUDIO EN PAUSA';
+    return;
+  }
+  const sources = audioMonitorSources();
+  const nextSignature = JSON.stringify(sources);
+  if (nextSignature !== audioMonitorSignature) {
+    audioMonitorSignature = nextSignature;
+    container.innerHTML = sources.map((url, index) => `<iframe title="Monitor de audio ${index + 1}" src="${url}&vd=0&autoplay=1" allow="autoplay"></iframe>`).join('');
+  }
+  $('#program-audio-status').textContent = sources.length ? 'ESCUCHANDO AUDIO DEL STREAM' : 'SIN FUENTE DE AUDIO';
+}
+
+function toggleAudioListening(value = !audioListening) {
+  audioListening = value;
+  $('#program-listen').textContent = audioListening ? 'SILENCIAR STREAM' : 'ESCUCHAR STREAM';
+  $('#program-listen').classList.toggle('listening', audioListening);
+  syncAudioMonitor();
 }
 
 function setInputWhenIdle(selector, value) {
@@ -79,6 +156,7 @@ document.addEventListener('click', async (event) => {
     if (event.target.id === 'clock-reset') { state = await api('/api/match/clock', { method: 'POST', body: JSON.stringify({ action: 'reset' }) }); render(); }
     if (event.target.id === 'obs-connect') { state = await api(`/api/obs/${state.obs.connected ? 'disconnect' : 'connect'}`, { method: 'POST' }); render(); }
     if (event.target.id === 'stream-toggle') { state = await api('/api/obs/stream', { method: 'POST', body: JSON.stringify({ active: !state.obs.streaming }) }); render(); }
+    if (event.target.id === 'program-listen') toggleAudioListening();
   } catch (error) { window.alert(error.message); }
 });
 
