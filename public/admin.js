@@ -67,11 +67,13 @@ function render() {
 function syncProgramMonitor() {
   const activeCamera = state.cameras.find((camera) => camera.slot === state.activeCamera && camera.viewUrl);
   const video = $('#program-video');
+  const overlay = $('#program-overlay');
   const empty = $('#program-empty');
   const label = $('#program-label');
   const listen = $('#program-listen');
   if (!activeCamera) {
     video.hidden = true;
+    overlay.hidden = true;
     empty.hidden = false;
     label.textContent = 'SIN CAMARA AL AIRE';
     listen.disabled = true;
@@ -81,6 +83,7 @@ function syncProgramMonitor() {
   const source = `${activeCamera.viewUrl}&muted=1`;
   if (video.src !== new URL(source, window.location.href).href) video.src = source;
   video.hidden = false;
+  overlay.hidden = false;
   empty.hidden = true;
   label.textContent = `AL AIRE / ${activeCamera.label}`;
   listen.disabled = false;

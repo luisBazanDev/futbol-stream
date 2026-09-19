@@ -18,7 +18,7 @@
         <div class="program-video-wrap">
           <div id="program-empty" class="program-empty">PON UNA CAMARA AL AIRE<br><small>EL MONITOR REPLICA LA ESCENA DEL STREAM</small></div>
           <iframe id="program-video" title="Monitor de programa" allow="autoplay; fullscreen" allowfullscreen hidden></iframe>
-          <iframe id="program-overlay" title="Overlay del programa" src="/overlay" tabindex="-1"></iframe>
+          <iframe id="program-overlay" title="Overlay del programa" src="/overlay" tabindex="-1" hidden></iframe>
         </div>
       </div>
       <div class="program-controls">
@@ -62,6 +62,6 @@
     </aside>
   </main>
   <dialog id="qr-dialog"><button class="dialog-close" onclick="this.closest('dialog').close()">×</button><p id="qr-label" class="eyebrow"></p><div class="qr-placeholder"><img id="qr-image" alt="QR para conectar la cámara"></div><input id="push-url" readonly><button id="copy-url" class="primary">COPIAR ENLACE</button></dialog>
-  <script src="/admin.js?v=4"></script>
+  <script src="/admin.js?v=5"></script>
 </body>
 </html>
