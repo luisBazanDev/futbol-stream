@@ -6,6 +6,7 @@ function render() {
   const { match } = currentState;
   $('#overlay-home').textContent = match.home;
   $('#overlay-away').textContent = match.away;
+  $('#overlay-brand').textContent = match.brand ?? 'FUTBOL STREAM';
   $('#overlay-home-score').textContent = match.homeScore;
   $('#overlay-away-score').textContent = match.awayScore;
   $('#overlay-period').textContent = match.period;

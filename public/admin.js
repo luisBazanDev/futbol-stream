@@ -1,7 +1,7 @@
 let state;
 let pendingMatchPatches = 0;
 let audioListening = false;
-let cameraListSignature = '';
+const cameraCardSignatures = new Map();
 let audioMonitorSignature = '';
 const $ = (selector) => document.querySelector(selector);
 const api = async (url, options = {}) => {
@@ -21,6 +21,7 @@ function render() {
   const { match, obs } = state;
   setInputWhenIdle('#home-name', match.home);
   setInputWhenIdle('#away-name', match.away);
+  setInputWhenIdle('#match-brand', match.brand);
   $('#home-score').textContent = match.homeScore;
   $('#away-score').textContent = match.awayScore;
   setInputWhenIdle('#period', match.period);
@@ -41,27 +42,60 @@ function render() {
   $('#audio-link').hidden = !laptopAudio.pushUrl;
   if (laptopAudio.pushUrl) $('#audio-push-url').value = laptopAudio.pushUrl;
   document.querySelectorAll('[data-audio]').forEach((button) => button.classList.toggle('active', button.dataset.audio === state.activeAudio));
-  const nextCameraListSignature = JSON.stringify(state.cameras.map((camera) => ({
-    slot: camera.slot,
-    label: camera.label,
-    connected: camera.connected,
-    viewUrl: camera.viewUrl,
-    active: state.activeCamera === camera.slot,
-  })));
-  if (nextCameraListSignature !== cameraListSignature) {
-    cameraListSignature = nextCameraListSignature;
-    $('#camera-list').innerHTML = state.cameras.map((camera) => `
-      <article class="camera-card ${state.activeCamera === camera.slot ? 'active' : ''} ${camera.connected ? '' : 'offline'}">
-        <div class="camera-preview-wrap">
-          ${camera.viewUrl ? `<iframe class="camera-preview" title="Preview ${escapeHtml(camera.label)}" src="${camera.viewUrl}&muted=1" allow="autoplay"></iframe>` : '<div class="camera-preview-empty">SIN SEÑAL</div>'}
-          <span class="camera-index">0${camera.slot}</span>
-          ${state.activeCamera === camera.slot ? '<span class="on-air">AL AIRE</span>' : ''}
-        </div>
-        <div class="camera-info"><div class="camera-name">${escapeHtml(camera.label)}</div><div class="camera-state ${camera.connected ? 'connected' : ''}">${camera.connected ? 'ENLACE GENERADO / LISTA' : 'SIN CONECTAR'}</div></div>
-        <div class="camera-actions"><button data-connect="${camera.slot}">${camera.connected ? 'QR / ENLACE' : 'CONECTAR'}</button><button class="air" data-air="${camera.slot}" ${camera.connected ? '' : 'disabled'}>${state.activeCamera === camera.slot ? 'AL AIRE' : 'PONER AL AIRE'}</button></div>
-      </article>`).join('');
-  }
+  renderCameraList();
   syncProgramMonitor();
+}
+
+function cameraPreviewUrl(viewUrl) {
+  const url = new URL(viewUrl, window.location.href);
+  url.searchParams.set('viewwidth', '640');
+  url.searchParams.set('viewheight', '360');
+  url.searchParams.set('muted', '1');
+  return url.toString();
+}
+
+function renderCameraList() {
+  const container = $('#camera-list');
+  state.cameras.forEach((camera) => {
+    const signature = JSON.stringify({
+      label: camera.label,
+      connected: camera.connected,
+      viewUrl: camera.viewUrl,
+    });
+    let card = container.querySelector(`[data-camera-slot="${camera.slot}"]`);
+
+    if (!card || cameraCardSignatures.get(camera.slot) !== signature) {
+      const template = document.createElement('template');
+      const previewUrl = camera.viewUrl ? escapeHtml(cameraPreviewUrl(camera.viewUrl)) : '';
+      template.innerHTML = `
+        <article class="camera-card ${camera.connected ? '' : 'offline'}" data-camera-slot="${camera.slot}">
+          <div class="camera-preview-wrap">
+            ${camera.viewUrl ? `<iframe class="camera-preview" title="Preview ${escapeHtml(camera.label)}" src="${previewUrl}" allow="autoplay"></iframe>` : '<div class="camera-preview-empty">SIN SEÑAL</div>'}
+            <span class="camera-index">0${camera.slot}</span>
+          </div>
+          <div class="camera-info"><div class="camera-name">${escapeHtml(camera.label)}</div><div class="camera-state ${camera.connected ? 'connected' : ''}">${camera.connected ? 'ENLACE GENERADO / LISTA' : 'SIN CONECTAR'}</div></div>
+          <div class="camera-actions"><button data-connect="${camera.slot}">${camera.connected ? 'QR / ENLACE' : 'CONECTAR'}</button><button class="air" data-air="${camera.slot}" ${camera.connected ? '' : 'disabled'}></button></div>
+        </article>`;
+      const updatedCard = template.content.firstElementChild;
+      if (card) card.replaceWith(updatedCard);
+      else container.append(updatedCard);
+      card = updatedCard;
+      cameraCardSignatures.set(camera.slot, signature);
+    }
+
+    const active = state.activeCamera === camera.slot;
+    card.classList.toggle('active', active);
+    const badge = card.querySelector('.on-air');
+    if (active && !badge) {
+      const onAirBadge = document.createElement('span');
+      onAirBadge.className = 'on-air';
+      onAirBadge.textContent = 'AL AIRE';
+      card.querySelector('.camera-preview-wrap').append(onAirBadge);
+    } else if (!active && badge) {
+      badge.remove();
+    }
+    card.querySelector('[data-air]').textContent = active ? 'AL AIRE' : 'PONER AL AIRE';
+  });
 }
 
 function syncProgramMonitor() {
@@ -80,7 +114,7 @@ function syncProgramMonitor() {
     if (audioListening) toggleAudioListening(false);
     return;
   }
-  const source = `${activeCamera.viewUrl}&muted=1`;
+  const source = cameraPreviewUrl(activeCamera.viewUrl);
   if (video.src !== new URL(source, window.location.href).href) video.src = source;
   video.hidden = false;
   overlay.hidden = false;
@@ -163,8 +197,8 @@ document.addEventListener('click', async (event) => {
   } catch (error) { window.alert(error.message); }
 });
 
-['home-name', 'away-name', 'period'].forEach((id) => $((`#${id}`)).addEventListener('change', () => {
-  const map = { 'home-name': 'home', 'away-name': 'away', period: 'period' };
+['home-name', 'away-name', 'match-brand', 'period'].forEach((id) => $((`#${id}`)).addEventListener('change', () => {
+  const map = { 'home-name': 'home', 'away-name': 'away', 'match-brand': 'brand', period: 'period' };
   patchMatch({ [map[id]]: id === 'added' ? Number($(`#${id}`).value) : $(`#${id}`).value });
 }));
 

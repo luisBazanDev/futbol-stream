@@ -45,6 +45,7 @@ const defaultState = {
   match: {
     home: "LOCAL",
     away: "VISITANTE",
+    brand: "FUTBOL STREAM",
     homeScore: 0,
     awayScore: 0,
     period: "1T",
@@ -68,6 +69,10 @@ function loadState() {
 }
 
 let state = loadState();
+if (state.match.brand === undefined) {
+  state.match.brand = defaultState.match.brand;
+  saveState();
+}
 if (!state.match.addedTimeUnit) {
   state.match.addedSeconds = Number(state.match.addedSeconds || 0) * 60;
   state.match.addedTimeUnit = "seconds";
@@ -205,17 +210,20 @@ async function ensureLaptopAudioSource() {
 async function syncCameraToObs(camera) {
   if (!obs || !state.obs.connected || !camera.viewUrl) return;
   const sceneName = await getProgramScene();
+  const inputSettings = {
+    url: camera.viewUrl,
+    width: 1280,
+    height: 720,
+    reroute_audio: true,
+    shutdown: false,
+    restart_when_active: false,
+  };
   try {
     await obs.call("CreateInput", {
       sceneName,
       inputName: camera.obsInputName,
       inputKind: "browser_source",
-      inputSettings: {
-        url: camera.viewUrl,
-        width: 1920,
-        height: 1080,
-        reroute_audio: true,
-      },
+      inputSettings,
       sceneItemEnabled: camera.slot === state.activeCamera,
     });
   } catch (error) {
@@ -223,7 +231,7 @@ async function syncCameraToObs(camera) {
       throw error;
     await obs.call("SetInputSettings", {
       inputName: camera.obsInputName,
-      inputSettings: { url: camera.viewUrl },
+      inputSettings,
     });
   }
 }
@@ -340,6 +348,7 @@ app.patch("/api/match", (req, res) => {
   const allowed = [
     "home",
     "away",
+    "brand",
     "homeScore",
     "awayScore",
     "period",
@@ -388,7 +397,7 @@ app.post("/api/cameras/:slot/connect", async (req, res) => {
   camera.label = String(req.body.label || camera.label).slice(0, 40);
   if (!camera.pushId || !/^[a-zA-Z0-9]+$/.test(camera.pushId))
     camera.pushId = randomId();
-  camera.pushUrl = `https://vdo.ninja/?push=${camera.pushId}&ps=0&ad=1`;
+  camera.pushUrl = `https://vdo.ninja/?push=${camera.pushId}&ps=0&ad=1&quality=1&fps=30`;
   camera.viewUrl = `https://vdo.ninja/?view=${camera.pushId}&cleanoutput=1&autoplay=1`;
   camera.connected = true;
   const qrDataUrl = await QRCode.toDataURL(camera.pushUrl, {

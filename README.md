@@ -45,7 +45,9 @@ Para los micrófonos de la laptop, conecta OBS desde el panel y pulsa `CONFIGURA
 3. Permite cámara y micrófono en VDO.Ninja.
 4. Pulsa `PONER AL AIRE` cuando quieras usarla.
 
-La fuente se crea en OBS usando el enlace de visualización de VDO.Ninja. Mantén los teléfonos conectados a corriente y evita que el navegador se suspenda.
+El enlace de envío pide como objetivo 720p a 30 fps; el teléfono y la conexión pueden limitar la resolución real. Si la cámara ya estaba transmitiendo, vuelve a abrir el enlace para aplicar estos parámetros. Las vistas previas del panel y su monitor usan una visualización limitada a 360p; las fuentes de cámara de OBS se configuran a 1280×720 y permanecen activas al quedar ocultas para que no se refresquen al cambiar de cámara. Tras actualizar el servidor, vuelve a conectar OBS desde el panel para aplicar este ajuste a las fuentes ya creadas.
+
+Mantén los teléfonos conectados a corriente y evita que el navegador se suspenda.
 
 ## Notas
 
