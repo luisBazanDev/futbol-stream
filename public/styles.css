@@ -95,7 +95,7 @@ dialog::backdrop { background: #000b; }
 .qr-placeholder img { display: block; height: auto; max-width: 100%; width: 220px; }
 dialog input { margin: 0 0 10px; font-size: 10px; }
 .overlay-page { background: transparent; overflow: hidden; }
-.scorebug { align-items: stretch; background: #0b0c0df2; border-left: 4px solid var(--accent); bottom: 34px; display: flex; left: 38px; max-width: calc(100vw - 24px); min-width: 0; position: fixed; width: min(600px, calc(100vw - 24px)); z-index: 100; }
+.scorebug { align-items: stretch; background: #0b0c0df2; border-left: 4px solid var(--accent); bottom: 34px; display: flex; left: 38px; max-width: calc(100vw - 24px); min-width: 0; position: fixed; width: min(550px, calc(100vw - 24px)); z-index: 100; }
 .overlay-team { align-items: center; display: flex; font-family: 'Barlow Condensed', sans-serif; font-size: clamp(16px, 2vw, 22px); gap: clamp(10px, 2vw, 22px); min-width: 0; padding: clamp(8px, 1.2vw, 12px) clamp(10px, 2vw, 20px); }
 .overlay-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .overlay-team b { font-size: clamp(24px, 3vw, 31px); font-weight: 500; }
