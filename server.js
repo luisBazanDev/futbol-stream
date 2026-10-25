@@ -212,8 +212,8 @@ async function syncCameraToObs(camera) {
   const sceneName = await getProgramScene();
   const inputSettings = {
     url: camera.viewUrl,
-    width: 1280,
-    height: 720,
+    width: 1920,
+    height: 1080,
     reroute_audio: true,
     shutdown: false,
     restart_when_active: false,
